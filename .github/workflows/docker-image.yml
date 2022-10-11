@@ -36,7 +36,7 @@ jobs:
 
     - name: create helm package
       run: |
-        helm package --version 0.0.${{ github.event.number }} charts/app
+        helm package --version 0.0.${{ github.event.number }} sample-app-source-repo/charts/app
         
 
     # - name: helm login for ghcr
