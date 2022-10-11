@@ -17,7 +17,7 @@ jobs:
       run: docker login ghcr.io -u ${{ secrets.REGISTRYUSERNAME }} -p ${{ secrets.REGISTRYPASSWORD }}
       
     - name: Build the Docker image
-      run: docker build . --tag ghcr.io/manisbindra/app:${{ github.event.pull_request.head.sha }}
+      run: docker build -f sample-app-source-repo/Dockerfile . --tag ghcr.io/manisbindra/app:${{ github.event.pull_request.head.sha }}
       
     - name: Push the Docker image
       run: docker push ghcr.io/manisbindra/app:${{ github.event.pull_request.head.sha }}
