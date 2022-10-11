@@ -8,16 +8,16 @@ spec:
   - pullRequest:
       github:
           owner: manisbindra
-          repo: ephemeral-app
+          repo: consolidated-ephemeral-test-env-repo
       requeueAfterSeconds: 120
   template:
     metadata:
       name: 'app-{{branch}}-{{number}}'
     spec:
       source:
-        repoURL: 'https://github.com/maniSbindra/ephemeral-env-infra.git'
+        repoURL: 'https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo.git'
         # targetRevision: '{{head_sha}}'
-        path: ephemeral-env
+        path: environment-infra-helm-repo/ephemeral-env
         helm:
           parameters:
           - name: "prSHA"
