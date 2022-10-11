@@ -9,7 +9,7 @@ spec:
     namespace: envpr{{ .Values.prNumber }}ns
   forProvider:
     location: "East US"
-    kubernetesVersion: "1.23.5"
+    kubernetesVersion: "1.24.6"
     resourceGroupNameRef:
       name: envpr{{ .Values.prNumber }}rg
       # namespace: {{ .Values.providerNamespace }}
