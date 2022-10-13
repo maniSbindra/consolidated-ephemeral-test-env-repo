@@ -1,8 +1,8 @@
 # Ephemeral Environment Setup using Custom Controller, Flux , Crossplane Azure Jet Provider, and Crossplane Helm Provider
 
 ## Overview
-This setup is to create a Kind Cluster and create the [pr-ephemeral-env-controller controller](https://github.com/maniSbindra/pr-ephemeral-env-controller) on the Cluster. A [PREphemeralEnvController Resource](./ephemeral-prcontroller-CR.yaml) is also created on the cluster. Once the controller and PREphemeralEnvController resource are created the controller creates (updates / deletes) a new Ephmeral environment for each PR to the [sample application repository](https://github.com/maniSbindra/ephemeral-app), which is a simple todo API (CRUD for todo items), the tech stack is Java / Springboot, and the application needs a backend postgres database. In this case an isolated environment is created for each PR, which includes a new resource group, a new AKS cluster to which the application deployment and service (corresponding to the PR SHA commit of the application) are applied, a new Azure Postgres backend database to which the application points to read and persist data.
-The Environment created is based on the spec.envCreationHelmRepo setting, which points to a helm chart based on which the environment is created. The Helm Chart repo for the configurations shown in current sample is [pr-ephemeral-env-controller](https://github.com/maniSbindra/pr-ephemeral-env-controller)
+This setup is to create a Kind Cluster and create the [pr-ephemeral-env-controller controller](https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo/tree/main/sample-flux-pr-eph-env-controller) on the Cluster. A [PREphemeralEnvController Resource](./ephemeral-prcontroller-CR.yaml) is also created on the cluster. Once the controller and PREphemeralEnvController resource are created the controller creates (updates / deletes) a new Ephmeral environment for each PR to the [sample application repository](https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo/tree/main/sample-app-source-repo), which is a simple todo API (CRUD for todo items), the tech stack is Java / Springboot, and the application needs a backend postgres database. In this case an isolated environment is created for each PR, which includes a new resource group, a new AKS cluster to which the application deployment and service (corresponding to the PR SHA commit of the application) are applied, a new Azure Postgres backend database to which the application points to read and persist data.
+The Environment created is based on the spec.envCreationHelmRepo setting, which points to a helm chart based on which the environment is created. The Helm Chart repo for the configurations shown in current sample is [pr-ephemeral-env-controller](https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo/tree/main/sample-flux-pr-eph-env-controller)
 
 ## Installation and Setup
 
@@ -57,8 +57,8 @@ The script [setup-mgmt-cluster_with_flux.sh](https://github.com/maniSbindra/ephe
   * HELM_OCI_REGISTRY_USER and HELM_OCI_REGISTRY_PASSWORD: This Github token needs to have permissions to read Helm charts published by the Application Repository (through github workflow in application repository)
   * POSTGRES_DB_PASSWORD: This will be used as the admin password for all ephemeral Postgres SQL Databases (one for each PR) created 
   * GITHUB_USER & GITHUB_TOKEN: This Github token will be used by the setup script to add a flux source for the infrastructure repository
-  * GITHUB_INFRA_REPOSITORY: https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo <!-- # Change to your App Repo  -->  
-  * FLUX_BOOTSTRAP_REPOSITORY: https://github.com/Your-Flux-Bootstrap-Repository <!-- # Change to your Infra Repo  -->
+  * GITHUB_INFRA_REPOSITORY: Add value like https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo <!-- # Change to your App Repo  -->  
+  * FLUX_BOOTSTRAP_REPOSITORY: Add value like https://github.com/Your-Flux-Bootstrap-Repository <!-- # Change to your Infra Repo  -->
 
 * Modify the values associated with app and infra repos in the [ephemeral-prcontroller-CR.yaml](./ephemeral-prcontroller-CR.yaml) file 
   * spec.githubRepository: The controller observes this repository for pull request changes, and accordingly makes changes that create, update or delete the ephemeral environment associated with the PR
@@ -288,7 +288,7 @@ Execute "kubectl get pods -A". This should show Crossplane (Azure Jet Provider a
 
   We can see from this that akspr22 (AKS cluster) and pgpr22 (postgres database) are now in the ready state, this means that these have been created. Let us look at these resources in the Azure Portal
 
-
+### Accessing the Application endpoint
 * The endpoint template for the application REST api is http://ephenvtestpr<PR_NUMBER>.eastus.cloudapp.azure.com, so for PR22 our service FQDN is http://ephenvtestpr22.eastus.cloudapp.azure.com. Let us curl this FQDN. 
   
   ```

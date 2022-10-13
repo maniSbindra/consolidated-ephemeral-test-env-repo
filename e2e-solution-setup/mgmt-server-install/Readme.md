@@ -1,8 +1,7 @@
 # Ephemeral Environment Setup using ArgoCD ApplicationSet (with PR Generator), Crossplane Azure Jet Provider, and Crossplane Helm Provider
 
 ## Overview
-This setup is to create a Kind Cluster and create a [Argo CD ApplicationSet](argo-app-set.yaml) with Github Pull Request Generator. Once setup is done and resources are created, the controller creates (updates / deletes) a new Ephmeral environment for each PR to the [sample application repository](https://github.com/maniSbindra/ephemeral-app), which is a simple todo API (CRUD for todo items), the tech stack is Java / Springboot, and the application needs a backend postgres database. In this case an isolated environment is created for each PR, which includes a new resource group, a new AKS cluster to which the application deployment and service (corresponding to the PR SHA commit of the application) are applied, a new Azure Postgres backend database to which the application points to read and persist data.
-The Environment created is based on the pull request generator configuration of the application set, which points to a helm chart based on which the environment is created. The Helm Chart repo for the configurations shown in current sample is [pr-ephemeral-env-controller](https://github.com/maniSbindra/pr-ephemeral-env-controller)
+This setup is to create a Kind Cluster and create a [Argo CD ApplicationSet](argo-app-set.yaml) with Github Pull Request Generator. Once setup is done and resources are created, the controller creates (updates / deletes) a new Ephmeral environment for each PR to the [sample application repository](https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo/tree/main/sample-app-source-repo), which is a simple todo API (CRUD for todo items), the tech stack is Java / Springboot, and the application needs a backend postgres database. In this case an isolated environment is created for each PR, which includes a new resource group, a new AKS cluster to which the application deployment and service (corresponding to the PR SHA commit of the application) are applied, a new Azure Postgres backend database to which the application points to read and persist data.
 
 ## Installation and Setup
 
@@ -57,8 +56,8 @@ The script [setup-mgmt-cluster.sh](https://github.com/maniSbindra/consolidated-e
   * HELM_OCI_REGISTRY_USER and HELM_OCI_REGISTRY_PASSWORD: This Github token needs to have permissions to read and write github packages
   * POSTGRES_DB_PASSWORD: This will be used as the admin password for all ephemeral Postgres SQL Databases (one for each PR) created 
   * GITHUB_USER & GITHUB_TOKEN: This Github token will be used by argo CD, to access the app and infrastructure repositories 
-  * GITHUB_APP_REPOSITORY: https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo <!-- # Change to your App Repo  -->
-  * GITHUB_INFRA_REPOSITORY: https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo.git <!-- # Change to your Infra Repo  -->
+  * GITHUB_APP_REPOSITORY: Add value like https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo <!-- # Change to your App Repo  -->
+  * GITHUB_INFRA_REPOSITORY: Add value like https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo.git <!-- # Change to your Infra Repo  -->
 
 * Modify the values associated with app and infra repos in the [argo-app-set.yaml](./argo-app-set.yaml) file 
   * spec.generators.pullRequest.github.owner: Add value as Github owner for the app repo
@@ -136,7 +135,7 @@ Execute "kubectl get pods -A". This should show Crossplane (Azure Jet Provider a
 * First we login to Argo CD UI using user admin. The password can be fetched using "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo".
 * Initially when no PRs have been created we should see no application in the Argo CD UI as shown
   ![Argo CD UI -> No PR -> No Applications](./images/argo-ui-no-pr.png)
-* Let us now create a PR against the application Repo (https://github.com/maniSbindra/ephemeral-app.git). Once a PR has been created in a minute or so an Argo CD application corresponding to the PR will be created and visible on the Argo CD UI.
+* Let us now create a PR against the application Repo (https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo). Once a PR has been created in a minute or so an Argo CD application corresponding to the PR will be created and visible on the Argo CD UI.
   Let us create a PR on Github
   ![PR Creation in Github](./images/github-create-pr.png)
   In this case our PR has PR number: 21 and commit SHA short hash: 87ef8f2. As a result we see an Argo CD application being created and visible on the Argo CD UI
@@ -237,6 +236,29 @@ Execute "kubectl get pods -A". This should show Crossplane (Azure Jet Provider a
 
   We can see from this that akspr21 (AKS cluster) and pgpr21 (postgres database) are now in the ready state, this means that these have been created. Let us look at these resources in the Azure Portal
 
+### Accessing the Application endpoint
+* The endpoint template for the application REST api is http://ephenvtestpr<PR_NUMBER>.eastus.cloudapp.azure.com, so for PR21 our service FQDN is http://ephenvtestpr21.eastus.cloudapp.azure.com. Let us curl this FQDN. 
+  
+  ```
+  $ curl http://ephenvtestpr21.eastus.cloudapp.azure.com                                                                                  
+   []
+  ```
+
+  We see that a blank array **[]** is returned in the response as there are no todo items in our database
+    
+  Let us now add a todo entry using curl
+  
+  ```
+    $ curl -X POST -H "Content-Type: application/json" --data '{"description": "test item sdf", "details": "test item detail sdf", "done": false}' http://ephenvtestpr21.eastus.cloudapp.azure.com
+    {"id":1,"description":"test item sdf","details":"test item detail sdf","done":false}
+  ```
+
+  If we now execute the curl get command again, we will see the to do entry we created using curl post appear in the response
+
+  ```
+  $ curl http://ephenvtestpr21.eastus.cloudapp.azure.com
+    [{"id":1,"description":"test item sdf","details":"test item detail sdf","done":false}]
+  ```
 
 ### Environment Deletion
 
