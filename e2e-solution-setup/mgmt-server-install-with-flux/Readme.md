@@ -127,7 +127,7 @@ pr-ephemeral-env-controller-system   pr-ephemeral-env-controller-controller-mana
   infra-repo-public       main/9c76e72    False           True    stored artifact for revision 'main/9c76e72de74197f21798c2e6f01b3e8488ef5435'
   ```
 
-* Verify the custom resource prcontroller has been created and is in the ready state
+* Verify the custom resource PREphemeralEnvController has been created and is in the ready state
 
   ```
   $ kubectl get PREphemeralEnvController -A
@@ -139,14 +139,14 @@ pr-ephemeral-env-controller-system   pr-ephemeral-env-controller-controller-mana
 
 ### Environment Creation
 
-* Initially when no PRs have been created we should see an event with message "No active PRs found" when describing the prcontroller-sample resource
+* Initially when no PRs have been created we should see an event with message "No active PRs found" when describing the pr-eph-env-ctrlr-1 resource
   
   ```
-  $ kubectl describe prcontroller prcontroller-sample | tail -n 5 
+  $ kubectl describe PREphemeralEnvController pr-eph-env-ctrlr-1 | tail -n 5 
   Events:
   Type    Reason       Age                    From                     Message
   ----    ------       ----                   ----                     -------
-  Normal  NoActivePRs  3m15s (x263 over 16h)  prcontroller-controller  No active PRs found
+  Normal  NoActivePRs  3m15s (x263 over 16h)  pr-ephem-env-controller  No active PRs found
   ```
 
   There should also be no Flux Helm Release resources in the pr-helm-releases namespace
@@ -166,13 +166,13 @@ pr-ephemeral-env-controller-system   pr-ephemeral-env-controller-controller-mana
    When we describe the controller, we see a new event with message "New flux HelmRelease created for PR 22" as shown below
 
    ```
-   $kubectl describe prcontroller prcontroller-sample | tail -n 5
+   $kubectl describe PREphemeralEnvController pr-eph-env-ctrlr-1 | tail -n 5
     
     Events:
       Type    Reason                  Age                    From                     Message
       ----    ------                  ----                   ----                     -------
-      Normal  NoActivePRs             5m55s (x323 over 17h)  prcontroller-controller  No active PRs found
-      Normal  FluxHelmReleaseCreated  113s                   prcontroller-controller  New flux HelmRelease created for PR 22
+      Normal  NoActivePRs             5m55s (x323 over 17h)  pr-ephem-env-controller  No active PRs found
+      Normal  FluxHelmReleaseCreated  113s                   pr-ephem-env-controller  New flux HelmRelease created for PR 22
    ```
 
    We also see a Flux Helm Release for the PR
@@ -229,14 +229,14 @@ pr-ephemeral-env-controller-system   pr-ephemeral-env-controller-controller-mana
   At this point we also see the event informing us that a Flux Helm release exists for the PR and is up to date, and if the application API is ready we will also see an EnvReady event.
 
   ```
-  $ kubectl describe prcontroller prcontroller-sample | tail -n 7
+  $ kubectl describe PREphemeralEnvController pr-eph-env-ctrlr-1 | tail -n 7
   Events:
   Type    Reason                  Age                  From                     Message
   ----    ------                  ----                 ----                     -------
-  Normal  NoActivePRs             46m (x323 over 18h)  prcontroller-controller  No active PRs found
-  Normal  FluxHelmReleaseCreated  42m                  prcontroller-controller  New flux HelmRelease created for PR 22
-  Normal  FluxHelmReleaseCreated  116s (x40 over 41m)  prcontroller-controller  Flux HelmRelease already exists for PR and is up to date, PR 22
-  Normal  EnvReady                31s (x37 over 3h37m)  prcontroller-controller  Environment is ready for PR 22
+  Normal  NoActivePRs             46m (x323 over 18h)  pr-ephem-env-controller  No active PRs found
+  Normal  FluxHelmReleaseCreated  42m                  pr-ephem-env-controller  New flux HelmRelease created for PR 22
+  Normal  FluxHelmReleaseCreated  116s (x40 over 41m)  pr-ephem-env-controller  Flux HelmRelease already exists for PR and is up to date, PR 22
+  Normal  EnvReady                31s (x37 over 3h37m)  pr-ephem-env-controller  Environment is ready for PR 22
   ```
 
 * We can now look at the status of crossplane created resources using the command "kubectl get crossplane".
@@ -324,12 +324,12 @@ After a while the FluxHelmRelease is deleted, along with the corresponding Azure
 The Controller event will now again show that there are no active PRs
 
 ```
-$ kubectl describe prcontroller prcontroller-sample | tail -n 7
+$ kubectl describe PREphemeralEnvController pr-eph-env-ctrlr-1 | tail -n 7
   Events:
   Type    Reason                  Age                    From                     Message
   ----    ------                  ----                   ----                     -------
-  Normal  EnvReady                20m (x140 over 3h52m)  prcontroller-controller  Environment is ready for PR 22
-  Normal  FluxHelmReleaseCreated  15m (x156 over 4h4m)   prcontroller-controller  Flux HelmRelease already exists for PR and is up to date, PR 22
-  Normal  NoActivePRs             9s (x340 over 21h)     prcontroller-controller  No active PRs found
+  Normal  EnvReady                20m (x140 over 3h52m)  pr-ephem-env-controller  Environment is ready for PR 22
+  Normal  FluxHelmReleaseCreated  15m (x156 over 4h4m)   pr-ephem-env-controller  Flux HelmRelease already exists for PR and is up to date, PR 22
+  Normal  NoActivePRs             9s (x340 over 21h)     pr-ephem-env-controller  No active PRs found
 ```
 
