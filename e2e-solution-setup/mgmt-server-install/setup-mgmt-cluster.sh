@@ -2,7 +2,7 @@
 
 # The script below assumes that kind, helm, kubectl , kubectl crossplane plugin, and argocd CLI are installed on the machine
 # 1. rename .env-template.sh to .env, and fill in the values of the variables
-# 2. Create creds.json file in the same directory as this script 'az ad sp create-for-rbac --role Contributor --scopes /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx > "creds.json"'
+# 2. Create creds.json file in the same directory as this script 'az ad sp create-for-rbac --sdk-auth --role Contributor --scopes /subscriptions/YOUR_SUBCRIPTION_ID_HERE > "creds.json"'
 
 set -o errexit
 set -o nounset

@@ -17,21 +17,39 @@ The script [setup-mgmt-cluster_with_flux.sh](https://github.com/maniSbindra/ephe
 * Flux CLI is installed : [Install Flux CLI](https://fluxcd.io/flux/installation/)
 * Additionally we also need to create creds.json file in the same directory as the script using the command.
     ```
-    az ad sp create-for-rbac --role Contributor --scopes /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx > "creds.json"
+    az ad sp create-for-rbac --sdk-auth --role Contributor --scopes /subscriptions/YOUR_SUBCRIPTION_ID_HERE > "creds.json"
     ```
-  This service principal is used by the Crossplane Azure jet provider to provision Azure resource. For more information regarding the service principal creation please see the [crossplane documentation](https://crossplane.io/docs/v1.9/getting-started/install-configure.html#get-azure-principal-keyfile)
+    
+    The format of this file is as follows:
+    ```
+    {
+      "clientId": "YOUR-APP-CLIENT-ID",
+      "clientSecret": "YOUR-CLIENT-SECRET",
+      "subscriptionId": "YOUR-SUBSCRIPTION-ID",
+      "tenantId": "YOUR-TENANT-ID",
+      "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+      "resourceManagerEndpointUrl": "https://management.azure.com/",
+      "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+      "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+      "galleryEndpointUrl": "https://gallery.azure.com/",
+      "managementEndpointUrl": "https://management.core.windows.net/"
+    }
+
+    ```
+
+  This service principal is used by the Crossplane Azure jet provider to provision Azure resources. For more information regarding the service principal creation please see the [crossplane documentation](https://crossplane.io/docs/v1.9/getting-started/install-configure.html#get-azure-principal-keyfile)
 
 ## Setup the Management Cluster
 
 * Clone the repo 
 
   ```
-  git clone https://github.com/maniSbindra/ephemeral-mgmt.git
+  git clone https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo.git
   ```
 
 * Give script execute permissions
   ```
-  cd mgmt-server-install-with-flux
+  cd e2e-solution-setup/mgmt-server-install-with-flux
   chmod +x setup-mgmt-cluster_with_flux.sh
   ```
 
@@ -39,15 +57,32 @@ The script [setup-mgmt-cluster_with_flux.sh](https://github.com/maniSbindra/ephe
   * HELM_OCI_REGISTRY_USER and HELM_OCI_REGISTRY_PASSWORD: This Github token needs to have permissions to read Helm charts published by the Application Repository (through github workflow in application repository)
   * POSTGRES_DB_PASSWORD: This will be used as the admin password for all ephemeral Postgres SQL Databases (one for each PR) created 
   * GITHUB_USER & GITHUB_TOKEN: This Github token will be used by the setup script to add a flux source for the infrastructure repository
-  * GITHUB_INFRA_REPOSITORY: https://github.com/maniSbindra/ephemeral-env-infra.git  
-  * FLUX_BOOTSTRAP_REPOSITORY: https://github.com/Your-Flux-Bootstrap-Repository 
+  * GITHUB_INFRA_REPOSITORY: https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo <!-- # Change to your App Repo  -->  
+  * FLUX_BOOTSTRAP_REPOSITORY: https://github.com/Your-Flux-Bootstrap-Repository <!-- # Change to your Infra Repo  -->
+
+* Modify the values associated with app and infra repos in the [ephemeral-prcontroller-CR.yaml](./ephemeral-prcontroller-CR.yaml) file 
+  * spec.githubRepository: The controller observes this repository for pull request changes, and accordingly makes changes that create, update or delete the ephemeral environment associated with the PR
+    * user: Add value as Github owner for the app repo
+    * repo: Add value as Github repo name for app repo
+    * tokenSecretRef: specifies the details about the kubernetes secret which contains the Github PAT token using which the controller can access the Github Repository and observe if for changes to PRs. The secret needs to be configured to enable the controller to do its job
+  * spec.envCreationHelmRepo: This references the Helm Chart which will be used as template to provision infrastructure for each PR
+    * fluxSourceRepoName: This is the Flux Source repository name, which points to Helm Chart repository. This Flux Source needs to exist to enable provisioning of ephemeral environment for the PR. For the example shown above, the "infra-repo-public" was created as follows:
+    ```
+    export GITHUB_INFRA_REPOSITORY="https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo"
+    flux create source git infra-repo-public \
+      --url ${GITHUB_INFRA_REPOSITORY} \
+      --branch "main" \
+      --username=${GITHUB_USER} --password=${GITHUB_TOKEN}
+    ```
+    * helmChartPath: Folder path to the helm chart
+    * destinationNamespace: The controller creates a Flux HelmRelease for each new PR. The Flux HelmReleases are created in this namespace. This namespace needs to exist on the cluster. The default option when you create multiple PREphemeralEnvController's should be to have distinct destinationNamespace's for each to avoid any overlap of resource names
 
 * Execute the script: next we execute the script
   
    ```
    ./setup-mgmt-cluster_with_flux.sh
    ```
-   This script should take around 4-5 minutes to execute. The last setup of this script creates a [custom resource](https://github.com/maniSbindra/ephemeral-mgmt/blob/main/mgmt-server-install-with-flux/ephemeral-prcontroller-CR.yaml) which our custom ephemeral environment controller monitors. This is the script where the name of the custom resource, the Gitub repository to monitor etc are set, see the "Ephemeral environment PR controller CRD specification" section for details on all fields. 
+   This script should take around 4-5 minutes to execute. 
    
 ## Validate the Management Cluster setup
 

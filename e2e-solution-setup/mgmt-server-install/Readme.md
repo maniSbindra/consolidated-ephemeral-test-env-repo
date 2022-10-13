@@ -6,7 +6,7 @@ The Environment created is based on the pull request generator configuration of 
 
 ## Installation and Setup
 
-The script [setup-mgmt-cluster.sh](https://github.com/maniSbindra/ephemeral-mgmt/blob/main/mgmt-server-install/setup-mgmt-cluster.sh) is used to setup the management cluster. Following are the prerequisites before installing this script:
+The script [setup-mgmt-cluster.sh](https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo/tree/main/e2e-solution-setup/mgmt-server-install/setup-mgmt-cluster.sh) is used to setup the management cluster. Following are the prerequisites before installing this script:
 
 ### Pre-requisites
 
@@ -17,21 +17,39 @@ The script [setup-mgmt-cluster.sh](https://github.com/maniSbindra/ephemeral-mgmt
 * argocd CLI is installed : [Install Argo CD CLI](https://argo-cd.readthedocs.io/en/stable/getting_started/#2-download-argo-cd-cli)
 * Additionally we also need to create creds.json file in the same directory as the script using the command.
     ```
-    az ad sp create-for-rbac --role Contributor --scopes /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx > "creds.json"
+    az ad sp create-for-rbac --sdk-auth --role Contributor --scopes /subscriptions/YOUR_SUBCRIPTION_ID_HERE > "creds.json"
     ```
-  This service principal is used by the Crossplane Azure jet provider to provision Azure resource. For more information regarding the service principal creation please see the [crossplane documentation](https://crossplane.io/docs/v1.9/getting-started/install-configure.html#get-azure-principal-keyfile)
+
+    The format of this file is as follows:
+    ```
+    {
+      "clientId": "YOUR-APP-CLIENT-ID",
+      "clientSecret": "YOUR-CLIENT-SECRET",
+      "subscriptionId": "YOUR-SUBSCRIPTION-ID",
+      "tenantId": "YOUR-TENANT-ID",
+      "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+      "resourceManagerEndpointUrl": "https://management.azure.com/",
+      "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+      "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+      "galleryEndpointUrl": "https://gallery.azure.com/",
+      "managementEndpointUrl": "https://management.core.windows.net/"
+    }
+
+    ```
+  This service principal is used by the Crossplane Azure jet provider to provision Azure resources. For more information regarding the service principal creation please see the [crossplane documentation](https://crossplane.io/docs/v1.9/getting-started/install-configure.html#get-azure-principal-keyfile)
+  
 
 ### Setup the Management Cluster
 
 * Clone the repo 
 
   ```
-  git clone https://github.com/maniSbindra/ephemeral-mgmt.git
+  git clone https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo.git
   ```
 
 * Give script execute permissions
   ```
-  cd ephemeral-mgmt/mgmt-server-install
+  cd e2e-solution-setup/ephemeral-mgmt/mgmt-server-install
   chmod +x setup-mgmt-cluster.sh
   ```
 
@@ -39,15 +57,23 @@ The script [setup-mgmt-cluster.sh](https://github.com/maniSbindra/ephemeral-mgmt
   * HELM_OCI_REGISTRY_USER and HELM_OCI_REGISTRY_PASSWORD: This Github token needs to have permissions to read and write github packages
   * POSTGRES_DB_PASSWORD: This will be used as the admin password for all ephemeral Postgres SQL Databases (one for each PR) created 
   * GITHUB_USER & GITHUB_TOKEN: This Github token will be used by argo CD, to access the app and infrastructure repositories 
-  * GITHUB_APP_REPOSITORY: https://github.com/maniSbindra/ephemeral-app
-  * GITHUB_INFRA_REPOSITORY: https://github.com/maniSbindra/ephemeral-env-infra.git
+  * GITHUB_APP_REPOSITORY: https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo <!-- # Change to your App Repo  -->
+  * GITHUB_INFRA_REPOSITORY: https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo.git <!-- # Change to your Infra Repo  -->
+
+* Modify the values associated with app and infra repos in the [argo-app-set.yaml](./argo-app-set.yaml) file 
+  * spec.generators.pullRequest.github.owner: Add value as Github owner for the app repo
+  * spec.generators.pullRequest.github.repo: Add value as Github repo name for app repo
+  * spec.template.spec.source.repoURL: Add value as full repository url for the infrastructure repo.
+  * spec.template.spec.source.path: Add value as folder path to the infra helm chart
+
+* If you are using a different Application repo, with say a different container image tag suffix for instance, please make sure that values in the [helm-release-app.yaml](../../environment-infra-helm-repo/ephemeral-env/templates/helm-release-app.yaml) file are inline with that.
 
 * Execute the script: next we execute the script
   
    ```
    ./setup-mgmt-cluster.sh
    ```
-   This script should take around 4-5 minutes to execute. The last setup of this script creates the [Argo CD ApplicationSet](https://github.com/maniSbindra/ephemeral-mgmt/blob/main/mgmt-server-install/argo-app-set.yaml). 
+   This script should take around 4-5 minutes to execute. The last setup of this script creates the [Argo CD ApplicationSet](https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo/tree/main/e2e-solution-setup/mgmt-server-install/argo-app-set.yaml). 
    
 ### Validate the Management Cluster setup
 
