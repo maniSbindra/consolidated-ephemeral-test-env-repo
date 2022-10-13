@@ -91,29 +91,29 @@ Next we validate that the management server installation is successful.
 ### Check that our custom controller and Crossplane controllers are running in the Management Cluster
 
 
-Execute "kubectl get pods -A". This should show Crossplane (Azure Jet Provider and Helm Provider controllers) and our custom controller running in the kubebuilder-system namespace as shown below
+Execute "kubectl get pods -A". This should show Crossplane (Azure Jet Provider and Helm Provider controllers) and our custom controller running in the pr-ephemeral-env-controller-system namespace as shown below
 
   ```
   $ kubectl get pods -A                                                                                                                            
-  NAMESPACE            NAME                                                             READY   STATUS    RESTARTS   AGE
-  crossplane-system    crossplane-6f6488b745-nxm7t                                      1/1     Running   0          3h24m
-  crossplane-system    crossplane-provider-helm-19a2e442342c-7dc6468f8b-vq5hn           1/1     Running   0          3h23m
-  crossplane-system    crossplane-provider-jet-azure-000558e62129-68cdf6654-jjrwj       1/1     Running   0          3h23m
-  crossplane-system    crossplane-rbac-manager-665757f749-4ndfw                         1/1     Running   0          3h24m
-  flux-system          helm-controller-7f4cb5648c-wxb2j                                 1/1     Running   0          3h22m
-  flux-system          kustomize-controller-76fdc7df8b-76m7b                            1/1     Running   0          3h22m
-  flux-system          notification-controller-75b7fbd7fd-d8swk                         1/1     Running   0          3h22m
-  flux-system          source-controller-f5c5ff8b8-sv9bj                                1/1     Running   0          3h22m
-  kube-system          coredns-64897985d-f9hxs                                          1/1     Running   0          3h24m
-  kube-system          coredns-64897985d-mnwnh                                          1/1     Running   0          3h24m
-  kube-system          etcd-crossplane-mgmt-eph-flux-control-plane                      1/1     Running   0          3h24m
-  kube-system          kindnet-62v7m                                                    1/1     Running   0          3h24m
-  kube-system          kube-apiserver-crossplane-mgmt-eph-flux-control-plane            1/1     Running   0          3h24m
-  kube-system          kube-controller-manager-crossplane-mgmt-eph-flux-control-plane   1/1     Running   0          3h24m
-  kube-system          kube-proxy-z5smp                                                 1/1     Running   0          3h24m
-  kube-system          kube-scheduler-crossplane-mgmt-eph-flux-control-plane            1/1     Running   0          3h24m
-  kubebuilder-system   kubebuilder-controller-manager-59f9c57c84-jlpgx                  2/2     Running   0          3h22m
-  local-path-storage   local-path-provisioner-5bb5788f44-4rkrf                          1/1     Running   0          3h24m
+NAMESPACE                            NAME                                                              READY   STATUS    RESTARTS   AGE
+crossplane-system                    crossplane-6f6488b745-xt8hj                                       1/1     Running   0          5m19s
+crossplane-system                    crossplane-provider-helm-ab96d6ecc76f-694db899d8-fb9f5            1/1     Running   0          4m15s
+crossplane-system                    crossplane-provider-jet-azure-000558e62129-68cdf6654-h2x89        1/1     Running   0          4m5s
+crossplane-system                    crossplane-rbac-manager-665757f749-lwxqh                          1/1     Running   0          5m19s
+flux-system                          helm-controller-7f4cb5648c-jz8gw                                  1/1     Running   0          3m44s
+flux-system                          kustomize-controller-76fdc7df8b-sf6c5                             1/1     Running   0          3m44s
+flux-system                          notification-controller-75b7fbd7fd-tn4kq                          1/1     Running   0          3m44s
+flux-system                          source-controller-f5c5ff8b8-dx8m8                                 1/1     Running   0          3m44s
+kube-system                          coredns-64897985d-d8vdg                                           1/1     Running   0          5m19s
+kube-system                          coredns-64897985d-t295m                                           1/1     Running   0          5m19s
+kube-system                          etcd-crossplane-mgmt-eph-flux-control-plane                       1/1     Running   0          5m36s
+kube-system                          kindnet-6frsq                                                     1/1     Running   0          5m20s
+kube-system                          kube-apiserver-crossplane-mgmt-eph-flux-control-plane             1/1     Running   0          5m36s
+kube-system                          kube-controller-manager-crossplane-mgmt-eph-flux-control-plane    1/1     Running   0          5m34s
+kube-system                          kube-proxy-lpcr2                                                  1/1     Running   0          5m20s
+kube-system                          kube-scheduler-crossplane-mgmt-eph-flux-control-plane             1/1     Running   0          5m34s
+local-path-storage                   local-path-provisioner-5bb5788f44-gpkhm                           1/1     Running   0          5m19s
+pr-ephemeral-env-controller-system   pr-ephemeral-env-controller-controller-manager-5bb997c9b8-6rln8   2/2     Running   0          2m20s
   ```
 
 #### Verify that the infra repository has been added as a flux source 
@@ -130,7 +130,7 @@ Execute "kubectl get pods -A". This should show Crossplane (Azure Jet Provider a
 * Verify the custom resource prcontroller has been created and is in the ready state
 
   ```
-  $ kubectl get prcontroller -A
+  $ kubectl get PREphemeralEnvController -A
   NAMESPACE   NAME                  STATUS
   default     pr-eph-env-ctrlr-1   Ready
   ```
@@ -149,14 +149,14 @@ Execute "kubectl get pods -A". This should show Crossplane (Azure Jet Provider a
   Normal  NoActivePRs  3m15s (x263 over 16h)  prcontroller-controller  No active PRs found
   ```
 
-  There should also be not Flux Helm Release resources in the pr-helm-releases namespace
+  There should also be no Flux Helm Release resources in the pr-helm-releases namespace
 
   ```
   $kubectl get helmrelease -A
     No resources found
   ```
   
-* Let us now create a PR against the application Repo [ephemeral-app](https://github.com/maniSbindra/ephemeral-app.git). Once a PR has been created, we should see a new event in the prcontroller.
+* Let us now create a PR against the [**application** Repo](https://github.com/maniSbindra/consolidated-ephemeral-test-env-repo/tree/main/sample-app-source-repo). Once a PR has been created, we should see a new event in the prcontroller.
   Let us create a PR on Github
    In this case our PR has PR number: 22 and commit SHA short hash: dfb5e1d. After the PR creation we see the following events taking place
    
