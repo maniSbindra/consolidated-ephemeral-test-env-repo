@@ -21,16 +21,21 @@ jobs:
       
     - name: Push the Docker image
       run: docker push ghcr.io/manisbindra/app:${{ github.event.pull_request.head.sha }}
-    
+
     - name: install helm
       uses: Azure/setup-helm@v1
+      with:
+        version: 3.9.2
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: create helm package
       run: |
-        helm package --version 0.0.${{ github.event.number }} sample-app-source-repo/charts/app
-  
-    - name: push helm artefact to ghcr
-      run: helm push $GITHUB_WORKSPACE/app-0.0.${{ github.event.number }}.tgz oci://ghcr.io/manisbindra/helm
+        helm package --version 0.0.${{ github.event.number }} charts/app
+        
+    - name: push helm to ghcr
+      run: |
+        helm push $GITHUB_WORKSPACE/app-0.0.${{ github.event.number }}.tgz oci://ghcr.io/manisbindra/helm
+
 
       
 

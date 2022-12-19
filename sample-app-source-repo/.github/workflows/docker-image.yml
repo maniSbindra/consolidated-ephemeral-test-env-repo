@@ -22,32 +22,16 @@ jobs:
     - name: Push the Docker image
       run: docker push ghcr.io/manisbindra/app:${{ github.event.pull_request.head.sha }}
 
-    # - name: Tag docker image
-    #   run: docker tag  ghcr.io/manisbindra/app:pull-${{ github.event.pull_request.head.sha }} ghcr.io/manisbindra/app:${{ github.sha }}
-      
-    # - name: Push new Docker image tag
-    #   run: docker push ghcr.io/manisbindra/app:${{ github.sha }}
-
     - name: install helm
       uses: Azure/setup-helm@v1
-
-    # - name: login to acr using helm
-    #   run: helm registry login ghcr.io --username ${{ secrets.REGISTRYUSERNAME }} --password {{ secrets.REGISTRYPASSWORD }}
+      with:
+        version: 3.9.2
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: create helm package
       run: |
         helm package --version 0.0.${{ github.event.number }} charts/app
         
-
-    # - name: helm login for ghcr
-    #   run: |
-    #     export HELM_EXPERIMENTAL_OCI=1
-    #     echo {{ secrets.REGISTRYPASSWORD }} | helm registry login ghcr.io --username ${{ secrets.REGISTRYUSERNAME }} --password-stdin
-
-  
     - name: push helm to ghcr
-      run: helm push $GITHUB_WORKSPACE/app-0.0.${{ github.event.number }}.tgz oci://ghcr.io/manisbindra/helm
-
-      
-
-    
+      run: |
+        helm push $GITHUB_WORKSPACE/app-0.0.${{ github.event.number }}.tgz oci://ghcr.io/manisbindra/helm
