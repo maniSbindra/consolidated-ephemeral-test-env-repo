@@ -35,12 +35,13 @@ helm install crossplane --namespace crossplane-system crossplane-stable/crosspla
 
 # wait for crosplane to be ready
 echo "Waiting for crossplane to be ready"
-sleep 30
+sleep 60
 
 # for next 2 commands kubectl crossplane extension needs to be installed
 # Install crossplane Azure Jet Provider
 echo "Installing crossplane Azure Jet Provider"
 kubectl crossplane install provider crossplane/provider-jet-azure:v0.9.0
+
 # Install crossplane helm provider
 echo "Installing crossplane helm provider"
 kubectl crossplane install provider crossplane/provider-helm:master
@@ -58,18 +59,25 @@ kubectl create secret generic psql-password -n crossplane-system --from-literal=
 kubectl create secret generic azure-creds -n crossplane-system --from-file=creds=./creds.json
 kubectl create secret generic helmoci -n crossplane-system --from-literal=username=$HELM_OCI_REGISTRY_USER --from-literal=password=$HELM_OCI_REGISTRY_PASSWORD
 
+
 # Setup Argocd
 echo "Setting up Argocd"
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
+kubectl create secret generic github-pat -n argocd --from-literal=pat=$GITHUB_TOKEN 
+
 # wait for argocd to be ready
 echo "Waiting for argocd to be ready"
-sleep 120
+sleep 140
 
 # login into argocd
 echo "Logging into argocd"
 kubectl port-forward svc/argocd-server -n argocd 8080:443 &
+K8s_PORT_FORWARD_PID=$!
+
+echo "Process ID of port forward task: ${K8s_PORT_FORWARD_PID}"
+
 ARGOCD_ADMIN_PASS=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo)
 argocd login localhost:8080 --username admin --password $ARGOCD_ADMIN_PASS --insecure
 
@@ -79,6 +87,7 @@ echo "Adding app and infra repos to argocd Repositories"
 argocd repo add $GITHUB_APP_REPOSITORY --username $GITHUB_USER --password $GITHUB_TOKEN
 argocd repo add $GITHUB_INFRA_REPOSITORY --username $GITHUB_USER --password $GITHUB_TOKEN
 
+kill -9 ${K8s_PORT_FORWARD_PID}
 
 # Apply application set with pull request builder
 echo "Applying application set with pull request builder"

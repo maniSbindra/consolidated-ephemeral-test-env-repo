@@ -1,14 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: sampleapps
+  name: prgen-test
   namespace: argocd
 spec:
   generators:
   - pullRequest:
       github:
-          owner: manisbindra
-          repo: consolidated-ephemeral-test-env-repo
+        owner: manisbindra
+        repo: ephemeral-app-pvt1
+        tokenRef:
+          secretName: github-pat
+          key: pat
       requeueAfterSeconds: 120
   template:
     metadata:
