@@ -30,11 +30,13 @@ jobs:
 
     - name: create helm package
       run: |
-        helm package --version 0.0.${{ github.event.number }} charts/app
+        helm package --version 0.0.${{ github.event.number }} sample-app-source-repo/charts/app
         
     - name: push helm to ghcr
       run: |
         helm push $GITHUB_WORKSPACE/app-0.0.${{ github.event.number }}.tgz oci://ghcr.io/manisbindra/helm
+
+        
 
 
       
